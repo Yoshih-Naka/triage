@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>スマホ事前チェック（トリアージ）</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #18202c;
+      --muted: #526071;
+      --line: #d5dde7;
+      --ok-bg: #eaf7ee;
+      --ok-bd: #2e7d32;
+      --ok-tx: #1b5e20;
+      --warn-bg: #fff8e6;
+      --warn-bd: #d98200;
+      --warn-tx: #7a4900;
+      --ng-bg: #fdecec;
+      --ng-bd: #c62828;
+      --ng-tx: #8e1515;
+      --btn: #155eef;
+      --btn-tx: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 17px;
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .box-title {
+      margin: 0 0 10px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+      font-size: 15px;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-label {
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .info-val {
+      font-weight: 700;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .verdict {
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+      border-left: 7px solid var(--warn-bd);
+      background: var(--warn-bg);
+      color: var(--warn-tx);
+    }
+
+    .verdict.ok {
+      border-left-color: var(--ok-bd);
+      background: var(--ok-bg);
+      color: var(--ok-tx);
+    }
+
+    .verdict.ng {
+      border-left-color: var(--ng-bd);
+      background: var(--ng-bg);
+      color: var(--ng-tx);
+    }
+
+    .verdict-head {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+
+    .verdict-desc {
+      margin: 0;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button.choice {
+      min-height: 52px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.choice.active {
+      border-color: var(--btn);
+      background: #eef4ff;
+      color: var(--btn);
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    details {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 18px;
+    }
+
+    summary {
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    pre {
+      margin: 10px 0 0;
+      padding: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>スマホ事前チェック</h1>
+      <p class="sub">サポートをスムーズに進めるため、お使いの端末の目安を表示します。</p>
+    </div>
+
+    <div id="verdictBox" class="verdict">
+      <div id="verdictHead" class="verdict-head">判定中...</div>
+      <p id="verdictDesc" class="verdict-desc">端末情報を確認しています。</p>
+    </div>
+
+    <div class="box">
+      <div class="box-title">1. 自動判定の目安</div>
+      <div class="info-row">
+        <span class="info-label">OS・バージョン目安</span>
+        <span id="osInfo" class="info-val">確認中</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">ブラウザ</span>
+        <span id="browserInfo" class="info-val">確認中</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">WebからのNFC判定</span>
+        <span id="nfcAutoInfo" class="info-val">確認中</span>
+      </div>
+      <div class="note">
+        ※ ブラウザの仕様上、正確なOSバージョンやNFC搭載の有無が自動判定できない端末があります。
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">2. おすそわけ・NFC（かざす読み取り）の確認</div>
+      <div class="info-row">
+        <span class="info-label">NFC（おサイフケータイ／かざす機能）</span>
+        <span id="nfcManualState" class="info-val">未確認</span>
+      </div>
+      <div class="btn-group">
+        <button type="button" class="choice" id="btnNfcYes" onclick="setNfcChoice('yes')">NFC（かざす機能）あり</button>
+        <button type="button" class="choice" id="btnNfcNo" onclick="setNfcChoice('no')">なし・わからない</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>スタッフ確認用（端末情報詳細）</summary>
+      <pre id="rawUa"></pre>
+    </details>
+  </div>
+
+  <script>
+    (function () {
+      const ua = navigator.userAgent || "";
+      let osText = "不明 / PC・その他";
+      let isIos = false;
+      let iosMajor = null;
+      let isAndroid = false;
+      let androidMajor = null;
+
+      // iOS 判定（iPadOS 13以降のデスクトップ表示も考慮）
+      const iosMatch = ua.match(/(?:iPhone|iPod|iPad).*?OS (\d+)(?:_(\d+))?/i);
+      if (iosMatch) {
+        isIos = true;
+        iosMajor = parseInt(iosMatch[1], 10);
+        const iosMinor = iosMatch[2] ? "." + iosMatch[2] : "";
+        osText = "iOS " + iosMajor + iosMinor;
+      } else if (/Macintosh/.test(ua) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) {
+        isIos = true;
+        osText = "iPadOS（タッチ端末）";
+      }
+
+      // Android 判定
+      const androidMatch = ua.match(/Android\s+(\d+(?:\.\d+)?)/i);
+      if (androidMatch) {
+        isAndroid = true;
+        osText = "Android " + androidMatch[1];
+        androidMajor = parseInt(androidMatch[1], 10);
+      }
+
+      // ブラウザ判定
+      let browserText = "その他ブラウザ";
+      if (/CriOS|Chrome/i.test(ua) && !/Edg/i.test(ua)) {
+        browserText = "Chrome系";
+      } else if (/Safari/i.test(ua) && !/Chrome|CriOS/i.test(ua)) {
+        browserText = "Safari";
+      } else if (/Edg/i.test(ua)) {
+        browserText = "Edge";
+      } else if (/Line\//i.test(ua)) {
+        browserText = "LINE内ブラウザ";
+      }
+
+      // Web NFC API 存在確認（主にAndroid Chrome等）
+      const hasWebNfc = ("NDEFReader" in window) || ("nfc" in navigator);
+      let nfcAutoText = "自動判定不可（ボタンで確認）";
+      if (isIos) {
+        nfcAutoText = "iOSはWeb自動判定非対応";
+      } else if (hasWebNfc) {
+        nfcAutoText = "Web NFC 検出（対応の可能性）";
+      }
+
+      document.getElementById("osInfo").textContent = osText;
+      document.getElementById("browserInfo").textContent = browserText;
+      document.getElementById("nfcAutoInfo").textContent = nfcAutoText;
+      document.getElementById("rawUa").textContent = ua;
+
+      let manualNfc = null;
+
+      function renderVerdict() {
+        const box = document.getElementById("verdictBox");
+        const head = document.getElementById("verdictHead");
+        const desc = document.getElementById("verdictDesc");
+
+        box.classList.remove("ok", "ng");
+
+        if (/Line\//i.test(ua)) {
+          box.classList.add("ng");
+          head.textContent = "ブラウザの変更をおすすめします";
+          desc.textContent = "LINE内の簡易ブラウザでは一部画面や認証がうまく進まないことがあります。Safari または Chrome で開いてください。";
+          return;
+        }
+
+        if (isIos && iosMajor !== null && iosMajor < 13) {
+          box.classList.add("ng");
+          head.textContent = "iOSのバージョン確認が必要です";
+          desc.textContent = "お使いのiOSバージョンが古いため、最新アプリや読み取り機能が使えない可能性があります。";
+          return;
+        }
+
+        if (isAndroid && androidMajor !== null && androidMajor < 8) {
+          box.classList.add("ng");
+          head.textContent = "Androidのバージョン確認が必要です";
+          desc.textContent = "お使いのAndroidバージョンが古いため、各種手続きや読み取りに制限が出る場合があります。";
+          return;
+        }
+
+        if (manualNfc === "no") {
+          box.classList.add("ng");
+          head.textContent = "NFC非対応の可能性があります";
+          desc.textContent = "マイナンバーカードの読み取りが必要な手続きは、NFC非対応端末では進められない場合があります。スタッフが状況を確認します。";
+          return;
+        }
+
+        if (manualNfc === "yes" || hasWebNfc || isIos) {
+          box.classList.add("ok");
+          head.textContent = "手続きを進めやすい状態です";
+          desc.textContent = "OSや端末条件の大きな支障は見当たりません。必要に応じてマイナンバーカードやパスワード、認証用メール等をご確認ください。";
+          return;
+        }
+
+        head.textContent = "下のボタンでNFCの状態を選択してください";
+        desc.textContent = "端末の「かざす機能（NFC）」の有無を教えていただくと、よりスムーズにご案内できます。";
+      }
+
+      window.setNfcChoice = function (choice) {
+        manualNfc = choice;
+        const btnYes = document.getElementById("btnNfcYes");
+        const btnNo = document.getElementById("btnNfcNo");
+        const stateEl = document.getElementById("nfcManualState");
+
+        btnYes.classList.toggle("active", choice === "yes");
+        btnNo.classList.toggle("active", choice === "no");
+        stateEl.textContent = choice === "yes" ? "あり（選択済み）" : "なし・わからない（選択済み）";
+
+        renderVerdict();
+      };
+
+      renderVerdict();
+    })();
+  </script>
+</body>
+</html>
