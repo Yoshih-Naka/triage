@@ -83,7 +83,7 @@
 
   <div id="nfcPrompt" class="info-box" style="display:none;">
     <strong>AndroidのNFC（マイナカード読取）確認：</strong><br>
-    端末の「設定」＞「接続済みの端末」＞「接続の設定」に<strong>NFC</strong>はありますか？（またはおサイフケータイ対応機種ですか？）
+    端末の「設定」で<strong>NFC</strong>が有効か、または本体裏面に<strong>おサイフケータイマーク</strong>があるか確認してください。
     <div class="btn-group">
       <button id="btnNfcYes" onclick="setNfc('yes')">NFCあり</button>
       <button id="btnNfcNo" onclick="setNfc('no')">NFCなし / 不明</button>
@@ -115,7 +115,7 @@
     if (m) androidVer = parseFloat(m[1]);
   }
 
-  // 古い機能の有無（構文エラー修正済みの supportsInert）
+  // 古い機能の有無
   const supportsWebAuthn = typeof window.PublicKeyCredential !== "undefined";
   const supportsInert = "inert" in HTMLElement.prototype;
   const likelyLegacyApple = isAppleTouchDevice && (!supportsWebAuthn || !supportsInert);
@@ -135,7 +135,7 @@
       return "iPhoneまたはiPad（デスクトップ表示／タッチ端末・要確認）";
     }
     if (hasRealIPhoneToken) return "iPhone";
-    return "Apple端末（要確認）";
+    return "iOS端末（要確認）";
   }
 
   function render() {
@@ -160,7 +160,7 @@
           "<strong>案内：</strong>「設定 ＞ 一般 ＞ 情報 / ソフトウェアアップデート」を確認してください。Safariの「AA / 表示」からモバイル表示への切替もご確認ください。";
       } else {
         badge.classList.add("ok");
-        badge.textContent = "【案内目安】Apple端末（対応候補）";
+        badge.textContent = "【案内目安】iOS端末（対応候補）";
         detail.innerHTML =
           "<strong>端末種別：</strong>" + deviceLabel + "<br>" +
           "<strong>OS目安：</strong>" + verDisp + "<br>" +
@@ -174,28 +174,28 @@
         badge.classList.add("ng");
         badge.textContent = "【要注意】NFC非搭載・未確認";
         detail.innerHTML =
-          "<strong>OS：</strong>" + verText + "<br>" +
+          "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>なし / 未確認<br>" +
           "<strong>案内：</strong>マイナンバーカード読取にはNFC対応が必要です。代替案内を確認してください。";
       } else if (androidVer !== null && androidVer < 10) {
         badge.classList.add("warn");
         badge.textContent = "【要確認】Androidバージョンが古めです";
         detail.innerHTML =
-          "<strong>OS：</strong>" + verText + "<br>" +
+          "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>" + (androidNfcChoice === "yes" ? "あり" : "未選択") + "<br>" +
           "<strong>案内：</strong>OSアップデート可否とNFC有無を確認してください。";
       } else if (androidNfcChoice === "yes") {
         badge.classList.add("ok");
         badge.textContent = "【案内目安】Android（NFC確認済）";
         detail.innerHTML =
-          "<strong>OS：</strong>" + verText + "<br>" +
+          "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>あり<br>" +
           "<strong>案内：</strong>そのまま受付・サポートへお進みください。";
       } else {
         badge.classList.add("warn");
         badge.textContent = "【確認中】NFCの有無をタップしてください";
         detail.innerHTML =
-          "<strong>OS：</strong>" + verText + "<br>" +
+          "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>下のボタンで選択してください";
       }
     } else {
