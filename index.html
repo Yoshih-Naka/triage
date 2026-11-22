@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- スマホ対応チェックツール v4.0 (汎用・判定メッセージ改善版) -->
+<!-- スマホ対応チェックツール v5.0 (汎用・画面ロック確認先頭行追加版) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>端末チェック v4.0（OS・NFC確認）</title>
+<title>端末チェック v5.0（OS・NFC確認）</title>
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Meiryo", sans-serif;
@@ -61,6 +61,19 @@
     margin: 14px 0;
     font-size: 0.95rem;
   }
+  .lock-gate {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .lock-status {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #1e3a8a;
+  }
   .btn-group {
     display: flex;
     gap: 10px;
@@ -70,8 +83,8 @@
   button {
     flex: 1;
     min-width: 120px;
-    padding: 12px 14px;
-    font-size: 1rem;
+    padding: 10px 12px;
+    font-size: 0.95rem;
     font-weight: bold;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
@@ -96,7 +109,7 @@
 <div class="card">
   <div class="header-row">
     <h1>スマホ対応チェック</h1>
-    <span class="ver-tag">v4.0</span>
+    <span class="ver-tag">v5.0</span>
   </div>
   <div id="resultBadge" class="badge">判定中...</div>
   <div id="resultDetail" class="info-box"></div>
@@ -115,7 +128,7 @@
 
 <script>
 (function() {
-  const APP_VERSION = "v4.0";
+  const APP_VERSION = "v5.0";
   const ua = navigator.userAgent || "";
   const isDesktopModeMac = (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || /Macintosh/i.test(ua);
   const hasRealIPadToken = /iPad/i.test(ua);
@@ -142,6 +155,33 @@
   const likelyLegacyApple = isAppleTouchDevice && (!supportsWebAuthn || !supportsInert);
 
   let androidNfcChoice = null;
+  let screenLockChoice = null;
+
+  function buildLockHeaderHtml() {
+    const setCls = screenLockChoice === "set" ? "active" : "";
+    const unsetCls = screenLockChoice === "unset" ? "active" : "";
+    let statusMsg = "画面ロックの申告：未選択（そのままでも進められます）";
+    if (screenLockChoice === "set") {
+      statusMsg = "画面ロック：設定済み（そのまま利用できます）";
+    } else if (screenLockChoice === "unset") {
+      statusMsg = "画面ロック：未設定（手続きの前にパスコード等の設定をご案内ください）";
+    }
+    return (
+      '<div class="lock-gate">' +
+        '<div><strong>画面ロック確認：</strong>パスコード、顔認証、指紋、PINコードはどれか設定していますか？</div>' +
+        '<div class="btn-group">' +
+          '<button type="button" id="btnLockSet" class="' + setCls + '" onclick="setScreenLock(\'set\')">設定している</button>' +
+          '<button type="button" id="btnLockUnset" class="' + unsetCls + '" onclick="setScreenLock(\'unset\')">まだ／これから設定</button>' +
+        '</div>' +
+        '<div class="lock-status">' + statusMsg + '</div>' +
+      '</div>'
+    );
+  }
+
+  window.setScreenLock = function(val) {
+    screenLockChoice = (screenLockChoice === val) ? null : val;
+    render();
+  };
 
   window.setNfc = function(val) {
     androidNfcChoice = val;
@@ -164,6 +204,7 @@
     const detail = document.getElementById("resultDetail");
     const nfcPrompt = document.getElementById("nfcPrompt");
     const uaInfo = document.getElementById("uaInfo");
+    const lockHeader = buildLockHeaderHtml();
 
     badge.className = "badge";
 
@@ -176,6 +217,7 @@
         badge.classList.add("warn");
         badge.textContent = "【確認しましょう】OS・表示設定のチェック";
         detail.innerHTML =
+          lockHeader +
           "<strong>端末種別：</strong>" + deviceLabel + "<br>" +
           "<strong>OS目安：</strong>" + verDisp + "<br>" +
           "<strong>案内：</strong>少し前のバージョンの可能性があります。「設定 ＞ 一般 ＞ 情報 / ソフトウェアアップデート」と、Safariの「AA / 表示」からモバイル表示になっているか一緒に確認しましょう。";
@@ -183,6 +225,7 @@
         badge.classList.add("ok");
         badge.textContent = "✨ ばっちり対応しています！（iPhone / iOS）";
         detail.innerHTML =
+          lockHeader +
           "<strong>端末種別：</strong>" + deviceLabel + "<br>" +
           "<strong>OS目安：</strong>" + verDisp + "<br>" +
           "<strong>NFC（読取機能）：</strong>iPhone 7以降であれば搭載されています<br>" +
@@ -195,6 +238,7 @@
         badge.classList.add("ng");
         badge.textContent = "【確認が必要です】NFC（カード読取）が見当たりません";
         detail.innerHTML =
+          lockHeader +
           "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>なし / 未確認<br>" +
           "<strong>案内：</strong>カード読み取りにはNFC機能が必要です。設定でNFCがオフになっていないか、または別の手続き方法を一緒に確認しましょう。";
@@ -202,6 +246,7 @@
         badge.classList.add("warn");
         badge.textContent = "【確認しましょう】Androidのバージョンが古めです";
         detail.innerHTML =
+          lockHeader +
           "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>" + (androidNfcChoice === "yes" ? "あり" : "未選択") + "<br>" +
           "<strong>案内：</strong>少し前のバージョンのため、OSアップデートができるか、また別の方法で進められるかを一緒に確認しましょう。";
@@ -210,6 +255,7 @@
           badge.classList.add("ok");
           badge.textContent = "👍 利用登録はばっちり対応しています！（Android 11）";
           detail.innerHTML =
+            lockHeader +
             "<strong>OS目安：</strong>" + verText + "<br>" +
             "<strong>NFC：</strong>あり<br>" +
             "<strong>案内：</strong>利用登録はこのまま進められます！※スマホ搭載機能はAndroid 12以上が対象です。";
@@ -217,6 +263,7 @@
           badge.classList.add("ok");
           badge.textContent = "✨ ばっちり対応しています！（Android）";
           detail.innerHTML =
+            lockHeader +
             "<strong>OS目安：</strong>" + verText + "<br>" +
             "<strong>NFC：</strong>あり<br>" +
             "<strong>案内：</strong>準備OK！このスマホでそのまま進められます。";
@@ -225,6 +272,7 @@
         badge.classList.add("warn");
         badge.textContent = "【あと一歩】下の「NFC」ボタンを選んでください";
         detail.innerHTML =
+          lockHeader +
           "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>下の「NFCあり」「NFCなし / 不明」をタップすると判定が完了します。";
       }
@@ -232,7 +280,9 @@
       nfcPrompt.style.display = "none";
       badge.classList.add("warn");
       badge.textContent = "【お願い】スマホの標準ブラウザで開いてください";
-      detail.innerHTML = "現在はパソコンやアプリ内ブラウザで開かれています。iPhoneの「Safari」またはAndroidの「Chrome」で読み取ってください。";
+      detail.innerHTML =
+        lockHeader +
+        "現在はパソコンやアプリ内ブラウザで開かれています。iPhoneの「Safari」またはAndroidの「Chrome」でQRコードを読み取ってください。";
     }
 
     uaInfo.textContent = "ツール " + APP_VERSION + " / 識別情報: " + ua;
