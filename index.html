@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- スマホ対応チェックツール v4.0 (汎用・判定メッセージ改善版) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>端末チェック（OS・NFC確認）</title>
+<title>端末チェック v4.0（OS・NFC確認）</title>
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Meiryo", sans-serif;
@@ -21,16 +22,32 @@
     padding: 22px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.08);
   }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
   h1 {
     font-size: 1.35rem;
-    margin: 0 0 12px 0;
+    margin: 0;
+  }
+  .ver-tag {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #4b5563;
+    background: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
   }
   .badge {
     display: inline-block;
-    padding: 8px 14px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     margin-bottom: 14px;
   }
   .ok { background: #dcfce7; color: #166534; border: 2px solid #22c55e; }
@@ -68,7 +85,7 @@
     border-color: #2563eb;
   }
   .note {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: #4b5563;
     margin-top: 14px;
     word-break: break-all;
@@ -77,12 +94,15 @@
 </head>
 <body>
 <div class="card">
-  <h1>スマホ対応チェック</h1>
+  <div class="header-row">
+    <h1>スマホ対応チェック</h1>
+    <span class="ver-tag">v4.0</span>
+  </div>
   <div id="resultBadge" class="badge">判定中...</div>
   <div id="resultDetail" class="info-box"></div>
 
   <div id="nfcPrompt" class="info-box" style="display:none;">
-    <strong>AndroidのNFC（マイナカード読取）確認：</strong><br>
+    <strong>AndroidのNFC（カード読取）確認：</strong><br>
     端末の「設定」で<strong>NFC</strong>が有効か、または本体裏面に<strong>おサイフケータイマーク</strong>があるか確認してください。
     <div class="btn-group">
       <button id="btnNfcYes" onclick="setNfc('yes')">NFCあり</button>
@@ -95,6 +115,7 @@
 
 <script>
 (function() {
+  const APP_VERSION = "v4.0";
   const ua = navigator.userAgent || "";
   const isDesktopModeMac = (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || /Macintosh/i.test(ua);
   const hasRealIPadToken = /iPad/i.test(ua);
@@ -153,59 +174,68 @@
 
       if (likelyLegacyApple) {
         badge.classList.add("warn");
-        badge.textContent = "【要確認】OS・ブラウザ機能を確認";
+        badge.textContent = "【確認しましょう】OS・表示設定のチェック";
         detail.innerHTML =
           "<strong>端末種別：</strong>" + deviceLabel + "<br>" +
           "<strong>OS目安：</strong>" + verDisp + "<br>" +
-          "<strong>案内：</strong>「設定 ＞ 一般 ＞ 情報 / ソフトウェアアップデート」を確認してください。Safariの「AA / 表示」からモバイル表示への切替もご確認ください。";
+          "<strong>案内：</strong>少し前のバージョンの可能性があります。「設定 ＞ 一般 ＞ 情報 / ソフトウェアアップデート」と、Safariの「AA / 表示」からモバイル表示になっているか一緒に確認しましょう。";
       } else {
         badge.classList.add("ok");
-        badge.textContent = "【案内目安】iOS端末（対応候補）";
+        badge.textContent = "✨ ばっちり対応しています！（iPhone / iOS）";
         detail.innerHTML =
           "<strong>端末種別：</strong>" + deviceLabel + "<br>" +
           "<strong>OS目安：</strong>" + verDisp + "<br>" +
-          "<strong>NFC：</strong>iPhone 7以降であれば搭載（機種により確認）<br>" +
-          "<strong>案内：</strong>必要に応じて「設定 ＞ 一般 ＞ 情報」で正確なiOSバージョンをご確認ください。";
+          "<strong>NFC（読取機能）：</strong>iPhone 7以降であれば搭載されています<br>" +
+          "<strong>案内：</strong>準備OK！このスマホでそのまま手続きを進められます。（必要に応じて「設定 ＞ 一般 ＞ 情報」で正確なiOSバージョンも確認できます）";
       }
     } else if (isAndroid) {
       nfcPrompt.style.display = "block";
       const verText = androidVer ? ("Android " + androidVer + "（目安）") : "Android（バージョン不明）";
       if (androidNfcChoice === "no") {
         badge.classList.add("ng");
-        badge.textContent = "【要注意】NFC非搭載・未確認";
+        badge.textContent = "【確認が必要です】NFC（カード読取）が見当たりません";
         detail.innerHTML =
           "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>なし / 未確認<br>" +
-          "<strong>案内：</strong>マイナンバーカード読取にはNFC対応が必要です。代替案内を確認してください。";
-      } else if (androidVer !== null && androidVer < 10) {
+          "<strong>案内：</strong>カード読み取りにはNFC機能が必要です。設定でNFCがオフになっていないか、または別の手続き方法を一緒に確認しましょう。";
+      } else if (androidVer !== null && androidVer < 11) {
         badge.classList.add("warn");
-        badge.textContent = "【要確認】Androidバージョンが古めです";
+        badge.textContent = "【確認しましょう】Androidのバージョンが古めです";
         detail.innerHTML =
           "<strong>OS目安：</strong>" + verText + "<br>" +
           "<strong>NFC：</strong>" + (androidNfcChoice === "yes" ? "あり" : "未選択") + "<br>" +
-          "<strong>案内：</strong>OSアップデート可否とNFC有無を確認してください。";
+          "<strong>案内：</strong>少し前のバージョンのため、OSアップデートができるか、また別の方法で進められるかを一緒に確認しましょう。";
       } else if (androidNfcChoice === "yes") {
-        badge.classList.add("ok");
-        badge.textContent = "【案内目安】Android（NFC確認済）";
-        detail.innerHTML =
-          "<strong>OS目安：</strong>" + verText + "<br>" +
-          "<strong>NFC：</strong>あり<br>" +
-          "<strong>案内：</strong>そのまま受付・サポートへお進みください。";
+        if (androidVer !== null && androidVer === 11) {
+          badge.classList.add("ok");
+          badge.textContent = "👍 利用登録はばっちり対応しています！（Android 11）";
+          detail.innerHTML =
+            "<strong>OS目安：</strong>" + verText + "<br>" +
+            "<strong>NFC：</strong>あり<br>" +
+            "<strong>案内：</strong>利用登録はこのまま進められます！※スマホ搭載機能はAndroid 12以上が対象です。";
+        } else {
+          badge.classList.add("ok");
+          badge.textContent = "✨ ばっちり対応しています！（Android）";
+          detail.innerHTML =
+            "<strong>OS目安：</strong>" + verText + "<br>" +
+            "<strong>NFC：</strong>あり<br>" +
+            "<strong>案内：</strong>準備OK！このスマホでそのまま進められます。";
+        }
       } else {
         badge.classList.add("warn");
-        badge.textContent = "【確認中】NFCの有無をタップしてください";
+        badge.textContent = "【あと一歩】下の「NFC」ボタンを選んでください";
         detail.innerHTML =
           "<strong>OS目安：</strong>" + verText + "<br>" +
-          "<strong>NFC：</strong>下のボタンで選択してください";
+          "<strong>NFC：</strong>下の「NFCあり」「NFCなし / 不明」をタップすると判定が完了します。";
       }
     } else {
       nfcPrompt.style.display = "none";
       badge.classList.add("warn");
-      badge.textContent = "【要確認】スマホの標準ブラウザで開いてください";
-      detail.innerHTML = "PCまたはアプリ内ブラウザから開かれています。iPhone/AndroidのSafariやChromeで読み取ってください。";
+      badge.textContent = "【お願い】スマホの標準ブラウザで開いてください";
+      detail.innerHTML = "現在はパソコンやアプリ内ブラウザで開かれています。iPhoneの「Safari」またはAndroidの「Chrome」で読み取ってください。";
     }
 
-    uaInfo.textContent = "識別情報: " + ua;
+    uaInfo.textContent = "ツール " + APP_VERSION + " / 識別情報: " + ua;
   }
 
   render();
